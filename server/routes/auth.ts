@@ -1,4 +1,4 @@
-import { randomBytes, scrypt as scryptCallback, timingSafeEqual } from "node:crypto";
+import { randomBytes, randomUUID, scrypt as scryptCallback, timingSafeEqual } from "node:crypto";
 import { promisify } from "node:util";
 import { RequestHandler } from "express";
 import pg from "pg";
@@ -29,10 +29,10 @@ export const handleRegister: RequestHandler = async (req, res) => {
     }
     const passwordHash = await hashPassword(password);
     const result = await pool.query<{ email: string; display_name: string; role: "admin" }>(
-      `INSERT INTO users (email, display_name, role, password_hash)
-       VALUES ($1, $2, 'admin', $3)
+      `INSERT INTO users (id, email, display_name, role, password_hash)
+       VALUES ($1, $2, $3, 'admin', $4)
        RETURNING email, display_name, role`,
-      [email, name, passwordHash],
+      [randomUUID(), email, name, passwordHash],
     );
     const user = result.rows[0];
     res.status(201).json({ user: { email: user.email, name: user.display_name, role: user.role } });

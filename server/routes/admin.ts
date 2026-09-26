@@ -1,29 +1,10 @@
 import { RequestHandler } from "express";
 import pg from "pg";
 import crypto from "node:crypto";
-import { AdminOverview, DemoAuthResponse, TransactionType } from "@shared/api";
+import { AdminOverview, TransactionType } from "@shared/api";
 
 const { Pool } = pg;
 const pool = process.env.DATABASE_URL ? new Pool({ connectionString: process.env.DATABASE_URL }) : null;
-
-const demoCredentials = {
-  email: process.env.DEMO_EMAIL ?? "demo@example.com",
-  password: process.env.DEMO_PASSWORD ?? "demo1234",
-};
-
-export const handleDemoAuth: RequestHandler = (req, res) => {
-  const { email, password } = req.body as { email?: string; password?: string };
-
-  if (email !== demoCredentials.email || password !== demoCredentials.password) {
-    res.status(401).json({ message: "Use the demo credentials shown on this page." });
-    return;
-  }
-
-  const response: DemoAuthResponse = {
-    user: { email: demoCredentials.email, name: "Madi", role: "admin" },
-  };
-  res.json(response);
-};
 
 export const handleAdminOverview: RequestHandler = async (req, res) => {
   if (!pool) {

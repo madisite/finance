@@ -2,7 +2,8 @@ import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import { handleDemo } from "./routes/demo";
-import { handleAdminOverview, handleDemoAuth, handleFireflySync } from "./routes/admin";
+import { handleAdminOverview, handleFireflySync } from "./routes/admin";
+import { handleLogin, handleRegister } from "./routes/auth";
 import { handleCreateInvoice, handleDeleteInvoice, handleGetInvoice, handleInvoicePayment, handleListInvoices, handleUpdateInvoice } from "./routes/payments";
 import { handleCreateLumaGeneration, handleGetLumaGeneration, handleKimaiSummary } from "./routes/integrations";
 import { createContact, createExpense, createProduct, createSalesOrder, deleteContact, deleteExpense, deleteProduct, deleteSalesOrder, erpReport, listContacts, listExpenses, listProducts, listSalesOrders, updateContact, updateExpense, updateProduct, updateSalesOrder } from "./routes/erp";
@@ -22,7 +23,8 @@ export function createServer() {
   });
 
   app.get("/api/demo", handleDemo);
-  app.post("/api/auth/demo", handleDemoAuth);
+  app.post("/api/auth/register", handleRegister);
+  app.post("/api/auth/login", handleLogin);
   app.get("/api/admin/overview", handleAdminOverview);
   app.post("/api/admin/sync", handleFireflySync);
   app.post("/api/erp/invoices", handleCreateInvoice);

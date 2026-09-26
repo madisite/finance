@@ -53,8 +53,11 @@ async function migrate() {
         email text UNIQUE NOT NULL,
         display_name text NOT NULL,
         role text NOT NULL DEFAULT 'admin',
+        password_hash text,
         created_at timestamptz NOT NULL DEFAULT now()
       );
+
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash text;
 
       CREATE TABLE IF NOT EXISTS account_transactions (
         id uuid PRIMARY KEY,
