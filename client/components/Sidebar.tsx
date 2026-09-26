@@ -13,7 +13,7 @@ export default function Sidebar() {
       <div className="md:hidden flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
           <div className="h-8 w-8 bg-gradient-to-br from-indigo-500 to-pink-500 rounded-md flex items-center justify-center text-white font-bold">F</div>
-          <div className="text-sm font-semibold">Flare</div>
+          <div className="text-sm font-semibold">Finance</div>
         </div>
         <button
           aria-label="Toggle menu"
@@ -37,6 +37,12 @@ export default function Sidebar() {
         <nav className="flex flex-col gap-2" aria-label="Secondary navigation">
           <Link to="/dashboard" className={`text-sm p-2 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 ${isActive("/dashboard") ? "bg-indigo-50 text-indigo-700" : "text-slate-700 hover:text-slate-900"}`}>
             Overview
+          </Link>
+          <Link to="/erp" className={`text-sm p-2 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 ${isActive("/erp") ? "bg-indigo-50 text-indigo-700" : "text-slate-700 hover:text-slate-900"}`}>
+            ERP Payments
+          </Link>
+          <Link to="/operations" className={`text-sm p-2 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 ${isActive("/operations") ? "bg-indigo-50 text-indigo-700" : "text-slate-700 hover:text-slate-900"}`}>
+            Operations
           </Link>
           <Link to="/docs" className={`text-sm p-2 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 ${isActive("/docs") ? "bg-indigo-50 text-indigo-700" : "text-slate-700 hover:text-slate-900"}`}>
             Docs

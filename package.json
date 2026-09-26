@@ -17,12 +17,19 @@
     "build:server": "vite build --config vite.config.server.ts",
     "start": "node dist/server/node-build.mjs",
     "test": "vitest --run --environment=jsdom",
+    "db:migrate": "tsx db/migrate.ts",
+    "db:check": "tsx db/check.ts",
     "format.fix": "prettier --write .",
     "typecheck": "tsc"
   },
   "dependencies": {
+    "@x402/core": "^2.26.0",
+    "@x402/evm": "^2.26.0",
+    "@x402/fetch": "^2.26.0",
     "dotenv": "^17.2.1",
     "express": "^5.1.0",
+    "pg": "^8.16.3",
+    "viem": "^2.37.6",
     "zod": "^3.25.76"
   },
   "devDependencies": {
