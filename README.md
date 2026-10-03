@@ -101,7 +101,7 @@ Set `FIREFLY_API_URL`, `FIREFLY_TOKEN`, and `FIREFLY_ACCOUNT_ID`. The configured
 
 ### x402 Payments
 
-Set `X402_FACILITATOR_URL`, `X402_NETWORK`, `X402_ASSET`, `X402_RECIPIENT`, and the IDR/USDC quote rate. `X402_ASSET` must be the token contract/address expected by the selected network and facilitator. Use a test network and test funds while developing.
+Set `X402_FACILITATOR_URL`, `X402_NETWORK`, `X402_ASSET`, `X402_RECIPIENT`, and the IDR/USDC quote rate. For Arc Testnet, use `X402_NETWORK="eip155:5042002"`; the wallet connection switches to Arc Testnet and uses `https://rpc.testnet.arc.network`. Override the public RPC endpoint with `VITE_ARC_TESTNET_RPC_URL` if needed. `X402_ASSET` must be the token contract/address expected by the selected network and facilitator. Use a test network and test funds while developing.
 
 ### Kimai
 

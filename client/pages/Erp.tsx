@@ -7,6 +7,26 @@ import { FormEvent, useEffect, useState } from "react";
 
 type Eip1193Provider = { request(args: { method: string; params?: unknown[] }): Promise<unknown> };
 type EthereumWindow = Window & { ethereum?: Eip1193Provider };
+const ARC_TESTNET_CHAIN_ID = "0x4cef52";
+const ARC_TESTNET_RPC_URL = import.meta.env.VITE_ARC_TESTNET_RPC_URL ?? "https://rpc.testnet.arc.network";
+
+async function switchToArcTestnet(provider: Eip1193Provider) {
+  try {
+    await provider.request({ method: "wallet_switchEthereumChain", params: [{ chainId: ARC_TESTNET_CHAIN_ID }] });
+  } catch (error) {
+    const code = typeof error === "object" && error !== null && "code" in error ? error.code : undefined;
+    if (code !== 4902) throw error;
+    await provider.request({
+      method: "wallet_addEthereumChain",
+      params: [{
+        chainId: ARC_TESTNET_CHAIN_ID,
+        chainName: "Arc Testnet",
+        nativeCurrency: { name: "USDC", symbol: "USDC", decimals: 6 },
+        rpcUrls: [ARC_TESTNET_RPC_URL],
+      }],
+    });
+  }
+}
 
 export default function FinanceErp() {
   const [invoices, setInvoices] = useState<ErpInvoice[]>([]);
@@ -22,6 +42,7 @@ export default function FinanceErp() {
       setMessage("Install MetaMask or another EVM wallet to connect.");
       return;
     }
+    await switchToArcTestnet(provider);
     const accounts = await provider.request({ method: "eth_requestAccounts" }) as string[];
     setWallet(accounts[0] ?? "");
   }
@@ -80,6 +101,7 @@ export default function FinanceErp() {
     setBusy(true);
     setMessage("Requesting x402 payment approval in your wallet...");
     try {
+      await switchToArcTestnet(provider);
       const accounts = wallet ? [wallet] : await provider.request({ method: "eth_accounts" }) as string[];
       const address = accounts[0];
       if (!address) throw new Error("Connect a wallet first.");
