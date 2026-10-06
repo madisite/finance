@@ -1,4 +1,10 @@
+.git
+.env
+.env.*
 node_modules
+dist
+coverage
+*.lognode_modules
 dist
 .git
 .gitignore

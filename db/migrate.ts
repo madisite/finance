@@ -125,18 +125,36 @@ async function migrate() {
         subtotal numeric(14, 2) NOT NULL DEFAULT 0,
         tax numeric(14, 2) NOT NULL DEFAULT 0,
         total numeric(14, 2) NOT NULL DEFAULT 0,
+        customer_name text NOT NULL,
         created_at timestamptz NOT NULL DEFAULT now()
       );
+
+      ALTER TABLE sales_orders ADD COLUMN IF NOT EXISTS customer_name text;
+      UPDATE sales_orders so
+      SET customer_name = COALESCE(NULLIF(BTRIM(so.customer_name), ''), (SELECT c.name FROM contacts c WHERE c.id = so.contact_id), 'Customer')
+      WHERE so.customer_name IS NULL OR BTRIM(so.customer_name) = '';
+      ALTER TABLE sales_orders ALTER COLUMN customer_name SET NOT NULL;
 
       CREATE TABLE IF NOT EXISTS sales_order_items (
         id uuid PRIMARY KEY,
         order_id uuid NOT NULL REFERENCES sales_orders(id) ON DELETE CASCADE,
+        contact_id uuid REFERENCES contacts(id),
         product_id uuid REFERENCES products(id),
         description text NOT NULL,
         quantity numeric(14, 3) NOT NULL CHECK (quantity > 0),
         unit_price numeric(14, 2) NOT NULL CHECK (unit_price >= 0),
-        line_total numeric(14, 2) NOT NULL
+        line_total numeric(14, 2) NOT NULL,
+        customer_name text NOT NULL
       );
+
+      ALTER TABLE sales_order_items ADD COLUMN IF NOT EXISTS contact_id uuid REFERENCES contacts(id);
+      ALTER TABLE sales_order_items ADD COLUMN IF NOT EXISTS customer_name text;
+      UPDATE sales_order_items soi
+      SET customer_name = COALESCE(NULLIF(BTRIM(soi.customer_name), ''), so.customer_name, 'Customer')
+      FROM sales_orders so
+      WHERE soi.order_id = so.id AND (soi.customer_name IS NULL OR BTRIM(soi.customer_name) = '');
+      UPDATE sales_order_items SET customer_name = 'Customer' WHERE customer_name IS NULL OR BTRIM(customer_name) = '';
+      ALTER TABLE sales_order_items ALTER COLUMN customer_name SET NOT NULL;
 
       CREATE TABLE IF NOT EXISTS expenses (
         id uuid PRIMARY KEY,

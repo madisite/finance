@@ -36,16 +36,16 @@ export const createExpense: RequestHandler = async (req, res) => {
 };
 
 export const createSalesOrder: RequestHandler = async (req, res) => {
-  const { contactId, items, tax = 0 } = req.body ?? {};
-  if (!Array.isArray(items) || items.length === 0 || !validNonNegative(tax) || items.some((item) => !isNonEmpty(item?.description) || !validPositive(item?.quantity) || !validNonNegative(item?.unitPrice))) return res.status(400).json({ message: "Add valid order items with positive quantities and non-negative prices and tax." });
+  const { contactId, customerName, items, tax = 0 } = req.body ?? {};
+  if (!isNonEmpty(customerName) || !Array.isArray(items) || items.length === 0 || !validNonNegative(tax) || items.some((item) => !isNonEmpty(item?.description) || !validPositive(item?.quantity) || !validNonNegative(item?.unitPrice))) return res.status(400).json({ message: "Enter a customer name and add valid order items with positive quantities and non-negative prices and tax." });
   if (!pool) return res.status(503).json({ message: "PostgreSQL is not configured." });
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
     const orderNumber = `SO-${new Date().getUTCFullYear()}-${crypto.randomBytes(3).toString("hex").toUpperCase()}`;
     const subtotal = items.reduce((sum: number, item: { quantity: number; unitPrice: number }) => sum + Number(item.quantity) * Number(item.unitPrice), 0);
-    const order = await client.query(`INSERT INTO sales_orders (id, order_number, contact_id, subtotal, tax, total) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`, [crypto.randomUUID(), orderNumber, contactId ?? null, subtotal, tax, subtotal + Number(tax)]);
-    for (const item of items) await client.query(`INSERT INTO sales_order_items (id, order_id, product_id, description, quantity, unit_price, line_total) VALUES ($1, $2, $3, $4, $5, $6, $7)`, [crypto.randomUUID(), order.rows[0].id, item.productId ?? null, item.description.trim(), item.quantity, item.unitPrice, Number(item.quantity) * Number(item.unitPrice)]);
+    const order = await client.query(`INSERT INTO sales_orders (id, order_number, contact_id, subtotal, tax, total, customer_name) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`, [crypto.randomUUID(), orderNumber, contactId || null, subtotal, tax, subtotal + Number(tax), customerName.trim()]);
+    await Promise.all(items.map((item) => client.query(`INSERT INTO sales_order_items (id, order_id, contact_id, product_id, description, quantity, unit_price, line_total, customer_name) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`, [crypto.randomUUID(), order.rows[0].id, contactId || null, item.productId ?? null, item.description.trim(), item.quantity, item.unitPrice, Number(item.quantity) * Number(item.unitPrice), customerName.trim()])));
     await client.query("COMMIT");
     res.status(201).json(order.rows[0]);
   } catch (error) {
@@ -56,7 +56,7 @@ export const createSalesOrder: RequestHandler = async (req, res) => {
 };
 
 export const listSalesOrders: RequestHandler = async (_req, res) => {
-  await queryOr503(res, "Unable to load sales orders", `SELECT so.*, c.name AS customer_name,
+  await queryOr503(res, "Unable to load sales orders", `SELECT so.*, c.name AS contact_name,
     COUNT(soi.id)::int AS item_count
     FROM sales_orders so LEFT JOIN contacts c ON c.id = so.contact_id
     LEFT JOIN sales_order_items soi ON soi.order_id = so.id
@@ -109,9 +109,9 @@ export const deleteExpense: RequestHandler = async (req, res) => {
 };
 
 export const updateSalesOrder: RequestHandler = async (req, res) => {
-  const { status, contactId } = req.body ?? {};
-  if (!["draft", "confirmed", "fulfilled", "cancelled"].includes(status)) return res.status(400).json({ message: "Choose a valid sales order status." });
-  await updateRecord(res, "sales order", "UPDATE sales_orders SET status = $2, contact_id = $3 WHERE id = $1 AND organization_id = 'demo' RETURNING *", [req.params.id, status, contactId || null]);
+  const { status, contactId, customerName } = req.body ?? {};
+  if (!["draft", "confirmed", "fulfilled", "cancelled"].includes(status) || !isNonEmpty(customerName)) return res.status(400).json({ message: "Choose a valid sales order status and enter a customer name." });
+  await updateRecord(res, "sales order", "UPDATE sales_orders SET status = $2, contact_id = $3, customer_name = $4 WHERE id = $1 AND organization_id = 'demo' RETURNING *", [req.params.id, status, contactId || null, customerName.trim()]);
 };
 
 export const deleteSalesOrder: RequestHandler = async (req, res) => {
