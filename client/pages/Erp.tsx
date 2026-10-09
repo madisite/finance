@@ -10,6 +10,17 @@ type EthereumWindow = Window & { ethereum?: Eip1193Provider };
 const ARC_TESTNET_CHAIN_ID = "0x4cef52";
 const ARC_TESTNET_RPC_URL = import.meta.env.VITE_ARC_TESTNET_RPC_URL ?? "https://rpc.testnet.arc.network";
 
+function walletErrorMessage(error: unknown) {
+  if (error instanceof Error) return error.message;
+  if (typeof error === "object" && error !== null) {
+    const detail = error as { message?: unknown; shortMessage?: unknown; code?: unknown };
+    const message = typeof detail.shortMessage === "string" ? detail.shortMessage : detail.message;
+    if (typeof message === "string") return message;
+    if (typeof detail.code === "number" || typeof detail.code === "string") return `Wallet error ${detail.code}.`;
+  }
+  return "Unknown wallet error.";
+}
+
 async function switchToArcTestnet(provider: Eip1193Provider) {
   try {
     await provider.request({ method: "wallet_switchEthereumChain", params: [{ chainId: ARC_TESTNET_CHAIN_ID }] });
@@ -42,9 +53,26 @@ export default function FinanceErp() {
       setMessage("Install MetaMask or another EVM wallet to connect.");
       return;
     }
-    await switchToArcTestnet(provider);
-    const accounts = await provider.request({ method: "eth_requestAccounts" }) as string[];
-    setWallet(accounts[0] ?? "");
+    setMessage("");
+    let accounts: string[];
+    try {
+      accounts = await provider.request({ method: "eth_requestAccounts" }) as string[];
+    } catch (error) {
+      setMessage(`Wallet connection failed: ${walletErrorMessage(error)}`);
+      return;
+    }
+    const address = accounts[0] ?? "";
+    if (!address) {
+      setMessage("Wallet did not return an authorized account.");
+      return;
+    }
+    setWallet(address);
+    try {
+      await switchToArcTestnet(provider);
+      setMessage("Wallet connected to Arc Testnet.");
+    } catch (error) {
+      setMessage(`Wallet connected, but Arc Testnet could not be selected: ${walletErrorMessage(error)}`);
+    }
   }
 
   async function createInvoice(event: FormEvent) {
