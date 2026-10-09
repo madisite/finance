@@ -3,6 +3,11 @@
   functions = "netlify/functions"
   publish = "dist/spa"
 
+[dev]
+  command = "npm run dev"
+  targetPort = 8080
+  publish = "dist/spa"
+  autoLaunch = false
 
 [functions]
   external_node_modules = ["express"]

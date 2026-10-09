@@ -13,10 +13,6 @@ export interface DemoResponse {
 
 export type TransactionType = "deposit" | "withdrawal" | "transfer" | "opening_balance" | "reconciliation";
 
-export interface DemoAuthResponse {
-  user: { email: string; name: string; role: "admin" };
-}
-
 export interface AdminTransaction {
   id: string;
   date: string;
